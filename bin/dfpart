@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cat ${1}| ${NLPAWK_INSTALLDIR}/bin/df.awk $(find ${NLPAWK_TMPDIR} -name words.\*.txt) > $(mktemp ${NLPAWK_TMPDIR}/dfparts.XXXXXX.txt)

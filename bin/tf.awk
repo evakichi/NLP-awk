@@ -1,6 +1,6 @@
 #!/usr/bin/awk -f
 {
-	str = ""; for ( i=2 ; i <= NF ; i++ ) str = str $i" "
+	str = "" ; for ( i=2 ; i <= NF ; i++ ) str = str" "$i
 	MOR[str]+=$1
 }
 END {

@@ -3,24 +3,44 @@
 CWD=$(pwd)
 
 export NLPAWK_INSTALLDIR=~/NLP-awk/
-export NLPAWK_PARALLEL=10
+export NLPAWK_PARALLEL=4
 
 export NLPAWK_TMPDIR=$(mktemp -d /tmp/nlp.XXXXXXX)
 export NLPAWK_FILES=${NLPAWK_TMPDIR}/file.list
 
+
+echo ${N} ${NLPAWK_TMPDIR}
+
 SRCDIR=${2}
+
 TF=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.tf)
+DF=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.df)
+
 MORPHONE=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.morphone)
-WORDS=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.wordlist)
+TARGET=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.wordlist)
 
 cat ${1} | ${NLPAWK_INSTALLDIR}/bin/cleanser | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper > ${MORPHONE}
 
 cat ${MORPHONE} | sort | uniq -c | ${NLPAWK_INSTALLDIR}/bin/tf.awk | sort > ${TF}
 
-cat ${MORPHONE} | sort | uniq > ${WORDS}
+cat ${MORPHONE} | sort | uniq > ${TARGET}
 
-split -n l/${NLPAWK_PARALLEL} ${WORDS} ${NLPAWK_TMPDIR}/tf.part.
+split -n l/${NLPAWK_PARALLEL} ${TARGET} ${NLPAWK_TMPDIR}/target.part.
 
 find ${2} -name \*.txt -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/mkwords {}
 
-find ${NLPAWK_TMPDIR} -name tf.part.\* -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/idf.awk {} $(find ${NLPAWK_TMPDIR} -name words.\*.txt -type f) |grep -v '^0.*' > ${CWD}/${1##*/}-$(date +%Y%m%d-%H%M%S).tfidf
+find ${2} -name \*.txt -type f > ${NLPAWK_FILES}
+N=$(wc -l ${NLPAWK_FILES}|cut -d " " -f1)
+
+find ${NLPAWK_TMPDIR} -name target.part.\* -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/dfpart {} 
+
+find ${NLPAWK_TMPDIR} -name dfparts.\*.txt -type f > ${NLPAWK_FILES}
+
+while read FILE
+do
+    cat < ${FILE} >> ${DF}
+done < ${NLPAWK_FILES}
+wc -l ${TF}
+wc -l ${DF}
+
+${NLPAWK_INSTALLDIR}/bin/tfidf.awk ${TF} ${N} ${DF} | sort -n > ${CWD}/${1##*/}-$(date +%Y%m%d-%H%M%S).tfidf
