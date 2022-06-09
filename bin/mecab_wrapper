@@ -1,0 +1,8 @@
+#!/bin/bash
+TMPFILE=$(mktemp)
+if [ -p /dev/stdin ]; then
+    cat - > ${TMPFILE}
+    mecab -b $(cat ${TMPFILE} |wc -c ${TMPFILE}|cut -d " " -f1)  ${TMPFILE}
+fi
+
+trap 'rm -rf ${TMPFILE}' INT KILL TERM EXIT

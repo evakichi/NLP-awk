@@ -1,0 +1,33 @@
+#!/bin/bash
+
+export NLPAWK_INSTALLDIR=~/NLP-awk/
+export NLPAWK_PARALLEL=10
+
+export NLPAWK_TMPDIR=$(mktemp -d /tmp/nlp.XXXXXXX)
+export NLPAWK_FILES=${NLPAWK_TMPDIR}/file.list
+
+SRCDIR=${2}
+TF=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.tf)
+MORPHONE=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.morphone)
+WORDS=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.wordlist)
+
+cat ${1} | ${NLPAWK_INSTALLDIR}/bin/cleanser | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper > ${MORPHONE}
+
+cat ${MORPHONE} | sort | uniq -c | ${NLPAWK_INSTALLDIR}/bin/tf.awk | sort > ${TF}
+
+cat ${MORPHONE} | sort | uniq > ${WORDS}
+
+split -n l/${NLPAWK_PARALLEL} ${WORDS} ${NLPAWK_TMPDIR}/tf.part.
+
+find ${2} -name \*.txt -type f > ${NLPAWK_FILES}
+
+while read FILE
+do
+	cat < ${FILE} | ${NLPAWK_INSTALLDIR}/bin/cleanser | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper | sort |uniq  > $(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.txt)
+done < ${NLPAWK_FILES}
+
+find ${NLPAWK_TMPDIR} -name nlp.\*.txt -type f > ${NLPAWK_FILES}
+
+find ${NLPAWK_TMPDIR} -name tf.part.\* -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/idf.awk {} $(find ${NLPAWK_TMPDIR} -name nlp.\*.txt -type f) |grep -v '^0.*'|sort -k2
+
+echo ${TF}

@@ -1,0 +1,4 @@
+#!/bin/bash
+if [ -p /dev/stdin ]; then
+    cat - |iconv -f SHIFT_JISX0213 -t UTF-8  | sed 's/《[^》]*》//g' | sed 's/［＃[^］]*\］//g' | tr -d '\r' |sed 's/^$/<BRBR>/g' | sed -z 's/\n/<BR>/g' | sed 's/<BRBR><BR><BRBR><BR><BRBR><BR>底本：.*//g' | sed 's/<BRBR><BR>--*[^-]*--*<BR><BRBR>//g' | sed -z 's/<BR>/\n/g' | sed -z 's/<BRBR>/\n/g'
+fi 
