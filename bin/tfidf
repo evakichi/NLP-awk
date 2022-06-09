@@ -1,5 +1,7 @@
 #!/bin/bash
 
+CWD=$(pwd)
+
 export NLPAWK_INSTALLDIR=~/NLP-awk/
 export NLPAWK_PARALLEL=10
 
@@ -28,6 +30,4 @@ done < ${NLPAWK_FILES}
 
 find ${NLPAWK_TMPDIR} -name nlp.\*.txt -type f > ${NLPAWK_FILES}
 
-find ${NLPAWK_TMPDIR} -name tf.part.\* -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/idf.awk {} $(find ${NLPAWK_TMPDIR} -name nlp.\*.txt -type f) |grep -v '^0.*'|sort -k2
-
-echo ${TF}
+find ${NLPAWK_TMPDIR} -name tf.part.\* -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/idf.awk {} $(find ${NLPAWK_TMPDIR} -name nlp.\*.txt -type f) |grep -v '^0.*' > ${CWD}/${1##*/}-$(date +%Y%m%d-%H%M%S).tfidf
