@@ -44,3 +44,5 @@ wc -l ${TF}
 wc -l ${DF}
 
 ${NLPAWK_INSTALLDIR}/bin/tfidf.awk ${TF} ${N} ${DF} | sort -n > ${CWD}/${1##*/}-$(date +%Y%m%d-%H%M%S).tfidf
+
+trap 'rm -rf ${NLPAWK_TMPDIR}' INT TERM KILL EXIT
