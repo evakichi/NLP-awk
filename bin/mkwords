@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cat ${1} | ${NLPAWK_INSTALLDIR}/bin/cleanser | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper | sort | uniq > $(mktemp ${NLPAWK_TMPDIR}/words.XXXXXX.txt)
+cat ${1} | ${NLPAWK_INSTALLDIR}/bin/preprocess | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper | sort | uniq > $(mktemp ${NLPAWK_TMPDIR}/words.XXXXXX.txt)

@@ -21,7 +21,7 @@ N=$(wc -l ${NLPAWK_FILES}|cut -d " " -f1)
 
 echo "Calc TF-IDF from ${N} text file(s) in ${NLPAWK_PARALLEL} proc(s).Temp dir is ${NLPAWK_TMPDIR}" 
 
-cat ${1} | ${NLPAWK_INSTALLDIR}/bin/cleanser | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper > ${MORPHONE}
+cat ${1} | ${NLPAWK_INSTALLDIR}/bin/preprocess | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper > ${MORPHONE}
 
 cat ${MORPHONE} | sort | uniq -c | ${NLPAWK_INSTALLDIR}/bin/tf.awk | sort > ${TF}
 
