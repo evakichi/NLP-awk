@@ -1,0 +1,61 @@
+#!/bin/bash
+
+CWD=$(pwd)
+
+export NLPAWK_INSTALLDIR=~/NLP-awk/
+export NLPAWK_PARALLEL=8
+
+export NLPAWK_TMPDIR=$(mktemp -d /tmp/nlp.XXXXXXX)
+export NLPAWK_FILES=${NLPAWK_TMPDIR}/file.list
+
+SRCDIR=${1}
+
+find ${1} -name \*.txt -type f > ${NLPAWK_FILES}
+N=$(wc -l ${NLPAWK_FILES}|cut -d " " -f1)
+
+echo "Calc TF-IDF from ${N} text file(s) in ${NLPAWK_PARALLEL} proc(s).Temp dir is ${NLPAWK_TMPDIR}" 
+
+TERMS=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.terms)
+
+while read FILE
+do
+cat < ${FILE} | ${NLPAWK_INSTALLDIR}/bin/preprocess >>${TERMS} 
+done < ${NLPAWK_FILES}
+
+cat < ${TERMS}| ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper | sort | uniq -c | sort -n > ${CWD}/$(date +%Y%m%d-%H%M%S).termdic
+exit;
+
+TF=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.tf)
+DF=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.df)
+
+MORPHONE=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.morphone)
+TARGET=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.wordlist)
+
+find ${2} -name \*.txt -type f > ${NLPAWK_FILES}
+N=$(wc -l ${NLPAWK_FILES}|cut -d " " -f1)
+
+echo "Calc TF-IDF from ${N} text file(s) in ${NLPAWK_PARALLEL} proc(s).Temp dir is ${NLPAWK_TMPDIR}" 
+
+cat ${1} | ${NLPAWK_INSTALLDIR}/bin/preprocess | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper > ${MORPHONE}
+
+cat ${MORPHONE} | sort | uniq -c | ${NLPAWK_INSTALLDIR}/bin/tf.awk | sort > ${TF}
+
+cat ${MORPHONE} | sort | uniq > ${TARGET}
+
+split -n l/${NLPAWK_PARALLEL} ${TARGET} ${NLPAWK_TMPDIR}/target.part.
+
+find ${2} -name \*.txt -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/mkwords {}
+
+
+find ${NLPAWK_TMPDIR} -name target.part.\* -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/dfpart {} 
+
+find ${NLPAWK_TMPDIR} -name dfparts.\*.txt -type f > ${NLPAWK_FILES}
+
+while read FILE
+do
+    cat < ${FILE} >> ${DF}
+done < ${NLPAWK_FILES}
+
+${NLPAWK_INSTALLDIR}/bin/tfidf.awk ${TF} ${N} ${DF} | sort -n > ${CWD}/${1##*/}-$(date +%Y%m%d-%H%M%S).tfidf
+
+#trap 'rm -rf ${NLPAWK_TMPDIR}' INT TERM KILL EXIT
