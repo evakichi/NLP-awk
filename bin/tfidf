@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 export NLPAWK_INSTALLDIR=~/NLP-awk/
-export NLPAWK_PARALLEL=10
+export NLPAWK_PARALLEL=8
 
 export NLPAWK_TMPDIR=$(mktemp -d /tmp/nlp.XXXXXXX)
 export NLPAWK_FILES=${NLPAWK_TMPDIR}/file.list
