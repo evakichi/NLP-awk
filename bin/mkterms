@@ -1,0 +1,5 @@
+#!/bin/bash
+while read FILE
+do
+    cat < ${FILE} | ${NLPAWK_INSTALLDIR}/bin/preprocess | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper |sort | uniq -c >$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.termspart)
+done < ${1}

@@ -10,31 +10,30 @@ export NLPAWK_FILES=${NLPAWK_TMPDIR}/file.list
 
 SRCDIR=${1}
 
-find ${1} -name \*.txt -type f > ${NLPAWK_FILES}
-N=$(wc -l ${NLPAWK_FILES}|cut -d " " -f1)
+find ${SRCDIR} -name \*.txt -type f > ${NLPAWK_FILES}
 
-echo "Calc Dectionary from ${N} text file(s) in ${NLPAWK_PARALLEL} proc(s).Temp dir is ${NLPAWK_TMPDIR}" 
+echo "Calc Dectionary from $(wc -l ${NLPAWK_FILES}|cut -d " " -f1) text file(s) in ${NLPAWK_PARALLEL} proc(s).Temp dir is ${NLPAWK_TMPDIR}" 
 
 split -n l/${NLPAWK_PARALLEL} ${NLPAWK_FILES} ${NLPAWK_TMPDIR}/target.part.
 
-find ${NLPAWK_TMPDIR} -name target.part.\* | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/mktermdic.p1 {} 
+find ${NLPAWK_TMPDIR} -name target.part.\* -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/mkterms {}
 
-find ${NLPAWK_TMPDIR} -name nlp.\*.dicpart > ${NLPAWK_FILES}
+find ${NLPAWK_TMPDIR} -name nlp.\*.termspart > ${NLPAWK_FILES}
 
 C=$(wc -l ${NLPAWK_FILES}|cut -d " " -f1)
 echo $C
 
 while [ ${C} -gt 1 ]
 do
-    echo $C
-    find ${NLPAWK_TMPDIR} -name nlp.\*.dicpart | xargs -L 2 -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/mktermdic.p2
-    find ${NLPAWK_TMPDIR} -name nlp.\*.dicpart > ${NLPAWK_FILES}
+    find ${NLPAWK_TMPDIR} -name nlp.\*.termspart | xargs -L 2 -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/mktermdic.p
+    find ${NLPAWK_TMPDIR} -name nlp.\*.termspart > ${NLPAWK_FILES}
     C=$(wc -l ${NLPAWK_FILES}|cut -d " " -f1)
+    echo $C
 done
 
-find ${NLPAWK_TMPDIR} -name nlp.\*.dicpart > ${NLPAWK_FILES}
+FILE=$(find ${NLPAWK_TMPDIR} -name nlp.\*.termspart)
 
-cat < $(cat ${NLPAWK_FILES}) > ${CWD}/$(date +%Y%m%d-%H%M%S).termdic
+mv ${FILE} ${CWD}/$(date +%Y%m%d-%H%M%S).termdic
 
 trap 'rm -rf ${NLPAWK_TMPDIR}' INT TERM KILL EXIT
 

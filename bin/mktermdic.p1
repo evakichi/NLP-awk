@@ -1,6 +1,0 @@
-#!/bin/bash
-while read FILE
-do
-    TMP=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.dicpart)
-    cat < ${FILE} | ${NLPAWK_INSTALLDIR}/bin/preprocess | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper |sort | uniq -c >${TMP}
-done < ${1}
