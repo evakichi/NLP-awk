@@ -1,0 +1,5 @@
+#!/bin/bash
+
+TMP1=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.dicpart)
+${NLPAWK_INSTALLDIR}/bin/mktermdic.p2.awk ${1} ${2} > ${TMP1}
+rm -rf ${1} ${2}

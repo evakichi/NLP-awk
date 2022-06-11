@@ -1,0 +1,11 @@
+#!/bin/bash
+TMP1=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.dicpart)
+TMP2=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.dicpart)
+while read FILE
+do
+    cat < ${FILE} | ${NLPAWK_INSTALLDIR}/bin/preprocess | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper |sort | uniq -c >>${TMP1}
+    rm ${FILE} 
+done < ${1}
+
+cat ${TMP1} | ${NLPAWK_INSTALLDIR}/bin/mktermdic.p1.awk > ${TMP2}
+rm ${TMP1}
