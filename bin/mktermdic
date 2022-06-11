@@ -15,15 +15,15 @@ N=$(wc -l ${NLPAWK_FILES}|cut -d " " -f1)
 
 echo "Calc Dectionary from ${N} text file(s) in ${NLPAWK_PARALLEL} proc(s).Temp dir is ${NLPAWK_TMPDIR}" 
 
-TERMS=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.terms)
-
 split -n l/${NLPAWK_PARALLEL} ${NLPAWK_FILES} ${NLPAWK_TMPDIR}/target.part.
 
 find ${NLPAWK_TMPDIR} -name target.part.\* | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/mktermdic.p1 {} 
 
 find ${NLPAWK_TMPDIR} -name nlp.\*.dicpart > ${NLPAWK_FILES}
+
 C=$(wc -l ${NLPAWK_FILES}|cut -d " " -f1)
 echo $C
+
 while [ ${C} -gt 1 ]
 do
     echo $C
@@ -32,10 +32,12 @@ do
     C=$(wc -l ${NLPAWK_FILES}|cut -d " " -f1)
 done
 
-
 find ${NLPAWK_TMPDIR} -name nlp.\*.dicpart > ${NLPAWK_FILES}
 
 cat < $(cat ${NLPAWK_FILES}) > ${CWD}/$(date +%Y%m%d-%H%M%S).termdic
+
+trap 'rm -rf ${NLPAWK_TMPDIR}' INT TERM KILL EXIT
+
 exit;
 
 TF=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.tf)
@@ -71,4 +73,3 @@ done < ${NLPAWK_FILES}
 
 ${NLPAWK_INSTALLDIR}/bin/tfidf.awk ${TF} ${N} ${DF} | sort -n > ${CWD}/${1##*/}-$(date +%Y%m%d-%H%M%S).tfidf
 
-#trap 'rm -rf ${NLPAWK_TMPDIR}' INT TERM KILL EXIT
