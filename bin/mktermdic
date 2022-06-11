@@ -24,7 +24,7 @@ C=$(wc -l ${NLPAWK_FILES}|cut -d " " -f1)
 
 while [ ${C} -gt 1 ]
 do
-    find ${NLPAWK_TMPDIR} -name nlp.\*.termspart | xargs -L 2 -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/mktermdic.p
+    find ${NLPAWK_TMPDIR} -name nlp.\*.termspart | xargs -L 2 -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/mergeterms
     find ${NLPAWK_TMPDIR} -name nlp.\*.termspart > ${NLPAWK_FILES}
     C=$(wc -l ${NLPAWK_FILES}|cut -d " " -f1)
 done

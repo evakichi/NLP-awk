@@ -3,12 +3,10 @@ if [ ${1} == "-c" ];then
     while read FILE
     do
         cat < ${FILE} | ${NLPAWK_INSTALLDIR}/bin/preprocess | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper | ${NLPAWK_INSTALLDIR}/bin/counter.awk >$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.termspart)
-#        cat < ${FILE} | ${NLPAWK_INSTALLDIR}/bin/preprocess | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper |sort | uniq -c >$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.termspart)
     done < ${2}
 else
     while read FILE
     do
         cat < ${FILE} | ${NLPAWK_INSTALLDIR}/bin/preprocess | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper |${NLPAWK_INSTALLDIR}/bin/uniq.awk >$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.termspart)
-#        cat < ${FILE} | ${NLPAWK_INSTALLDIR}/bin/preprocess | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper |sort | uniq  >$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.termspart)
     done < ${1}
 fi
