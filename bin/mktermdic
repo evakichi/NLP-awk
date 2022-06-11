@@ -31,7 +31,7 @@ done
 
 FILE=$(find ${NLPAWK_TMPDIR} -name nlp.\*.termspart)
 
-mv ${FILE} ${CWD}/$(date +%Y%m%d-%H%M%S).termdic
+mv ${FILE} "${CWD}/TERMDIC-$(date +%Y%m%d-%H%M%S).termdic"
 
 trap 'rm -rf ${NLPAWK_TMPDIR}' INT TERM KILL EXIT
 

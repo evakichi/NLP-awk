@@ -6,42 +6,64 @@ export NLPAWK_INSTALLDIR=~/NLP-awk/
 export NLPAWK_PARALLEL=8
 
 export NLPAWK_TMPDIR=$(mktemp -d /tmp/nlp.XXXXXXX)
-export NLPAWK_FILES=${NLPAWK_TMPDIR}/file.list
+export NLPAWK_TARGETFILE_LIST=$(mktemp ${NLPAWK_TMPDIR}/file.XXXXXXX.list)
+export NLPAWK_SOURCEFILE_LIST=$(mktemp ${NLPAWK_TMPDIR}/file.XXXXXXX.list)
 
-SRCDIR=${2}
+TARGETDIR=${1}
+SOURCEDIR=${2}
+
+if [ -f ${TARGETDIR} ]; then echo "${TARGETDIR} is not a firectory."; exit 128; fi
+if [ -f ${SOURCEDIR} ]; then echo "${SOURCEDIR} is not a firectory."; exit 128; fi
 
 TF=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.tf)
 DF=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.df)
 
-MORPHOME=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.morphome)
 TARGET=$(mktemp ${NLPAWK_TMPDIR}/nlp.XXXXXXX.wordlist)
 
-find ${SRCDIR} -name \*.txt -type f > ${NLPAWK_FILES}
-N=$(wc -l ${NLPAWK_FILES}|cut -d " " -f1)
+find ${SOURCEDIR} -name \*.txt -type f > ${NLPAWK_SOURCEFILE_LIST}
+N=$(wc -l ${NLPAWK_SOURCEFILE_LIST}|cut -d " " -f1)
+
+find ${TARGETDIR} -name \*.txt -type f > ${NLPAWK_TARGETFILE_LIST}
 
 echo "Calc TF-IDF from ${N} text file(s) in ${NLPAWK_PARALLEL} proc(s).Temp dir is ${NLPAWK_TMPDIR}" 
 
-cat ${1} | ${NLPAWK_INSTALLDIR}/bin/preprocess | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper > ${MORPHOME}
-
-cat ${MORPHOME} | ${NLPAWK_INSTALLDIR}/bin/counter.awk | ${NLPAWK_INSTALLDIR}/bin/tf.awk | sort > ${TF}
-
-cat ${MORPHOME} | ${NLPAWK_INSTALLDIR}/bin/uniq.awk > ${TARGET}
-
-split -n l/${NLPAWK_PARALLEL} ${NLPAWK_FILES} ${NLPAWK_TMPDIR}/files.part.
-
+split -n l/${NLPAWK_PARALLEL} ${NLPAWK_SOURCEFILE_LIST} ${NLPAWK_TMPDIR}/files.part.
 find ${NLPAWK_TMPDIR} -name files.part.\* -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/mkterms {}
 
-split -n l/${NLPAWK_PARALLEL} ${TARGET} ${NLPAWK_TMPDIR}/target.part.
+OUTPUTDIR="${CWD}/TF-IDF-$(date +%Y%m%d-%H%M%S)"
+mkdir -p ${OUTPUTDIR}
 
-find ${NLPAWK_TMPDIR} -name target.part.\* -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/df {} 
+M=$(wc -l ${NLPAWK_TARGETFILE_LIST}|cut -d " " -f1) 
+echo "Analyzing for ${M} files..."
 
-find ${NLPAWK_TMPDIR} -name dfparts.\*.txt -type f > ${NLPAWK_FILES}
+m=0
 
 while read FILE
 do
-    cat < ${FILE} >> ${DF}
-done < ${NLPAWK_FILES}
+    cat ${FILE} | ${NLPAWK_INSTALLDIR}/bin/preprocess | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper | ${NLPAWK_INSTALLDIR}/bin/counter.awk | ${NLPAWK_INSTALLDIR}/bin/tf.awk | sort > ${TF}
+    cat ${FILE} | ${NLPAWK_INSTALLDIR}/bin/preprocess | ${NLPAWK_INSTALLDIR}/bin/mecab_wrapper | ${NLPAWK_INSTALLDIR}/bin/uniq.awk > ${TARGET}
 
-${NLPAWK_INSTALLDIR}/bin/tfidf.awk ${TF} ${N} ${DF} | sort -n > ${CWD}/${1##*/}-$(date +%Y%m%d-%H%M%S).tfidf
+    split -n l/${NLPAWK_PARALLEL} ${TARGET} ${NLPAWK_TMPDIR}/target.part.
+    
+    find ${NLPAWK_TMPDIR} -name target.part.\* -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/df {} 
+    find ${NLPAWK_TMPDIR} -name dfparts.\*.txt -type f > ${NLPAWK_SOURCEFILE_LIST}
+
+    while read file
+    do
+        cat < ${file} >> ${DF}
+    done < ${NLPAWK_SOURCEFILE_LIST}
+
+    OUTPUTFILE=${OUTPUTDIR}/${FILE##*/}.tfidf
+    
+    ${NLPAWK_INSTALLDIR}/bin/tfidf.awk ${TF} ${N} ${DF} | sort -n > ${OUTPUTFILE}
+    
+    m=$((${m}+1))
+    echo "${m}/${M}:${OUTPUTFILE} was created."
+
+    rm -f $(find ${NLPAWK_TMPDIR} -name target.part.\*  -type f)
+    rm -f $(find ${NLPAWK_TMPDIR} -name dfparts.part.\*.txt -type f)
+    cp /dev/null ${DF}
+
+done < ${NLPAWK_TARGETFILE_LIST}
 
 trap 'rm -rf ${NLPAWK_TMPDIR}' INT TERM KILL EXIT
