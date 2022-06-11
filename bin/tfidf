@@ -27,9 +27,11 @@ cat ${MORPHOME} | sort | uniq -c | ${NLPAWK_INSTALLDIR}/bin/tf.awk | sort > ${TF
 
 cat ${MORPHOME} | sort | uniq > ${TARGET}
 
-split -n l/${NLPAWK_PARALLEL} ${TARGET} ${NLPAWK_TMPDIR}/target.part.
+split -n l/${NLPAWK_PARALLEL} ${NLPAWK_FILES} ${NLPAWK_TMPDIR}/files.part.
 
-find ${SRCDIR} -name \*.txt -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/mkwords {}
+find ${NLPAWK_TMPDIR} -name files.part.\* -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/mkterms {}
+
+split -n l/${NLPAWK_PARALLEL} ${TARGET} ${NLPAWK_TMPDIR}/target.part.
 
 find ${NLPAWK_TMPDIR} -name target.part.\* -type f | xargs -I {} -P ${NLPAWK_PARALLEL} ${NLPAWK_INSTALLDIR}/bin/dfpart {} 
 
